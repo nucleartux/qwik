@@ -392,7 +392,7 @@ pub fn transform_code(config: TransformCodeOptions) -> Result<TransformOutput, a
 						]
 						.concat();
 						let need_handle_watch =
-							might_need_handle_watch(&h.data.ctx_kind, &h.data.ctx_name) && is_entry;
+							might_need_handle_watch(&h.data.ctx_kind, &h.data.ctx_name);
 
 						let (mut hook_module, comments) = new_module(NewModuleCtx {
 							expr: h.expr,

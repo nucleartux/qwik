@@ -68,7 +68,12 @@ export function qwikRollup(qwikRollupOpts: QwikRollupPluginOptions = {}): any {
     },
 
     outputOptions(rollupOutputOpts) {
-      return normalizeRollupOutputOptionsObject(qwikPlugin.getOptions(), rollupOutputOpts, false);
+      return normalizeRollupOutputOptionsObject(
+        qwikPlugin.getOptions(),
+        rollupOutputOpts,
+        false,
+        qwikPlugin.manualChunks
+      );
     },
 
     async buildStart() {
@@ -148,7 +153,8 @@ export function qwikRollup(qwikRollupOpts: QwikRollupPluginOptions = {}): any {
 export function normalizeRollupOutputOptions(
   opts: NormalizedQwikPluginOptions,
   rollupOutputOpts: Rollup.OutputOptions | Rollup.OutputOptions[] | undefined,
-  useAssetsDir: boolean
+  useAssetsDir: boolean,
+  manualChunks: Rollup.GetManualChunk
 ): Rollup.OutputOptions[] {
   const outputOpts: Rollup.OutputOptions[] = Array.isArray(rollupOutputOpts)
     ? // fill the `outputOpts` array with all existing option entries
@@ -162,14 +168,15 @@ export function normalizeRollupOutputOptions(
   }
 
   return outputOpts.map((outputOptsObj) =>
-    normalizeRollupOutputOptionsObject(opts, outputOptsObj, useAssetsDir)
+    normalizeRollupOutputOptionsObject(opts, outputOptsObj, useAssetsDir, manualChunks)
   );
 }
 
 export function normalizeRollupOutputOptionsObject(
   opts: NormalizedQwikPluginOptions,
   rollupOutputOptsObj: Rollup.OutputOptions | undefined,
-  useAssetsDir: boolean
+  useAssetsDir: boolean,
+  manualChunks: Rollup.GetManualChunk
 ): Rollup.OutputOptions {
   const outputOpts: Rollup.OutputOptions = { ...rollupOutputOptsObj };
 
@@ -217,6 +224,13 @@ export function normalizeRollupOutputOptionsObject(
   if (opts.target === 'client') {
     // client should always be es
     outputOpts.format = 'es';
+    const prevManualChunks = outputOpts.manualChunks;
+    if (prevManualChunks && typeof prevManualChunks !== 'function') {
+      throw new Error('manualChunks must be a function');
+    }
+    outputOpts.manualChunks = prevManualChunks
+      ? (id, meta) => prevManualChunks(id, meta) || manualChunks(id, meta)
+      : manualChunks;
   }
 
   if (!outputOpts.dir) {

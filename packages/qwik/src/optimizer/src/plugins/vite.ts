@@ -317,6 +317,11 @@ export function qwikVite(qwikViteOpts: QwikVitePluginOptions = {}): any {
           dynamicImportVarsOptions: {
             exclude: [/./],
           },
+          rollupOptions: {
+            output: {
+              manualChunks: qwikPlugin.manualChunks,
+            },
+          },
         },
         define: {
           [qDevKey]: qDev,
@@ -339,7 +344,8 @@ export function qwikVite(qwikViteOpts: QwikVitePluginOptions = {}): any {
           output: normalizeRollupOutputOptions(
             opts,
             viteConfig.build?.rollupOptions?.output,
-            useAssetsDir
+            useAssetsDir,
+            qwikPlugin.manualChunks
           ).map((outputOptsObj) => {
             outputOptsObj.dir = buildOutputDir;
             return outputOptsObj;
